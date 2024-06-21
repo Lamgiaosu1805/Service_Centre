@@ -8,18 +8,21 @@ const F88ServiceController = {
             const response = await axios.post('https://api-ida-pn.f88.co/api/v1/POL/AddNewForm', {
                 PartnerCode: "VNFITE",
                 RequestId: requestId,
-                Data: {
-                    AssetTypeId: 20,
-                    CampaignId: 2,
-                    PhoneNumber: body.PhoneNumber,
-                    TrackingId: "",
-                    SourceId: 374
-                }
+                Data: [
+                    {
+                        AssetTypeId: 20,
+                        CampaignId: 2,
+                        PhoneNumber: body.phoneNumber,
+                        TrackingId: "",
+                        SourceId: 374,
+                        FullName: body.fullname
+                    }
+                ]
             });
-            console.log(response.data)
+            console.log(response)
             res.send("a")
         } catch (error) {
-            
+            res.send(error)
         }
     }
 }
