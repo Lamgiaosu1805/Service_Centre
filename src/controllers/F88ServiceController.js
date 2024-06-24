@@ -19,8 +19,7 @@ const F88ServiceController = {
                     }
                 ]
             });
-            console.log(response)
-            res.send("a")
+            res.json(response.data)
         } catch (error) {
             res.send(error)
         }
