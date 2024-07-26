@@ -3,6 +3,7 @@ const app = express()
 const route = require('./src/routes')
 const morgan = require('morgan')
 const db = require('./src/config/connectdb')
+const cors = require('cors');
 
 require('dotenv').config();
 
@@ -12,6 +13,7 @@ app.use(express.json())
 app.use(express.urlencoded({
     extended: true
 }))
+app.use(cors());
 
 //connectdb
 db.connect()
