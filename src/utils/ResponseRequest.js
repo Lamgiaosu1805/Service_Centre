@@ -13,7 +13,7 @@ const FailureResponse = (errorCode, error) => {
         status: false,
         errorCode: errorCode,
         message: HandleErrorCode(errorCode),
-        error: error?.toString()
+        error: error
     }
 }
 module.exports = {SuccessResponse, FailureResponse}

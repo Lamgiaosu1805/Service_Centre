@@ -8,10 +8,9 @@ const Customer = new Schema({
     mail: { type: String, default: "" },
     address: { type: String, default: "" },
     is_active: {type: Boolean, default: false},
-    birthday: {type: Date},
+    birth: {type: Date, default: null},
     make_by: {type: String, default: ""}, //Nguồn data FORM hoặc Data sẵn có
 }, {
     timestamps: true
 })
-
 module.exports = mongoose.model('customer', Customer)
