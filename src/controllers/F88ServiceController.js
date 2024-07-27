@@ -16,7 +16,9 @@ const F88ServiceController = {
                     mail: body.mail,
                     address: body.address,
                     birth: body.birth,
-                    make_by: "FORM"
+                    make_by: "FORM",
+                    city: body.city_name,
+                    district: body.district_name
                 })
             }
             else {
@@ -27,7 +29,9 @@ const F88ServiceController = {
                     mail: body.mail,
                     address: body.address,
                     birth: body.birth,
-                    make_by: "FORM"
+                    make_by: "FORM",
+                    city: body.city_name,
+                    district: body.district_name
                 })
                 await newCustomer.save()
             }

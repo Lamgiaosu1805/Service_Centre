@@ -9,7 +9,9 @@ const Customer = new Schema({
     address: { type: String, default: "" },
     is_active: {type: Boolean, default: false},
     birth: {type: Date, default: null},
-    make_by: {type: String, default: ""}, //Nguồn data FORM hoặc Data sẵn có
+    make_by: {type: String, default: ""}, //Nguồn data FORM hoặc Data sẵn có,
+    city: {type: String, default: ""},
+    district: {type: String, default: ""},
 }, {
     timestamps: true
 })
