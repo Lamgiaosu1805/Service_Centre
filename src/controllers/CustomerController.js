@@ -31,15 +31,8 @@ const CustomerController = {
             for (let j = 0; j < currentBatchSize; j++) {
                 const newRecord = {
                     full_name: listCustomer[i * batchSize + j].full_name,
-                    cccd: listCustomer[i * batchSize + j].cccd,
-                    date_range: listCustomer[i * batchSize + j].date_range,
-                    issued_by: listCustomer[i * batchSize + j].issued_by,
                     phone_number: listCustomer[i * batchSize + j].phone_number,
                     mail: listCustomer[i * batchSize + j].mail,
-                    address: listCustomer[i * batchSize + j].address,
-                    permanent_address: listCustomer[i * batchSize + j].permanent_address,
-                    birth: listCustomer[i * batchSize + j].birth,
-                    gender: listCustomer[i * batchSize + j].gender,
                     customer_type: listCustomer[i * batchSize + j].customer_type,
                     job: listCustomer[i * batchSize + j].job,
                     position: listCustomer[i * batchSize + j].position,
