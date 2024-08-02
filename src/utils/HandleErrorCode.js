@@ -18,7 +18,18 @@ const HandleErrorCode = (errorCode) => {
             return `Error:${errorCode}, Có lỗi khi lấy thông tin partner`;
         case "09":
             return `Error:${errorCode}, Not Authenticated`;
-
+        case "10":
+            return `Error:${errorCode}, username đã tồn tại`;
+        case "11":
+            return `Error:${errorCode}, Có lỗi khi tạo account`;
+        case "12":
+            return `Error:${errorCode}, Account không tồn tại`;
+        case "13":
+            return `Error:${errorCode}, Có lỗi khi lấy thông tin account`;
+        case "14":
+            return `Error:${errorCode}, User không tồn tại`;
+        case "15":
+            return `Error:${errorCode}, Có lỗi khi đăng nhập`;
         default:
             return "Error: " + errorCode + ", Lỗi không xác định";
     }

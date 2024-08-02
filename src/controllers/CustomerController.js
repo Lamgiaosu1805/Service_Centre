@@ -1,6 +1,4 @@
-const AddressModel = require("../models/AddressModel")
 const CustomerModel = require("../models/CustomerModel")
-const CustomerTypeModel = require("../models/CustomerTypeModel");
 const LoanNeedModel = require("../models/LoanNeedModel");
 const { SuccessResponse } = require("../utils/ResponseRequest")
 const mongoose = require('mongoose');
