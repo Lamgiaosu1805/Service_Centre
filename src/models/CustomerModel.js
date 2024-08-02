@@ -3,7 +3,7 @@ const Schema = mongoose.Schema
 
 const Customer = new Schema({
     full_name: { type: String, required: true },
-    phone_number: { type: String, required: true },
+    phone_number: { type: String, required: true, unique: true },
     mail: { type: String, default: "" },
     is_active: {type: Boolean, default: false},
     make_by: {type: String, default: ""}, //Nguồn data FORM hoặc Data sẵn có,
