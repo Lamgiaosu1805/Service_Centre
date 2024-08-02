@@ -16,7 +16,7 @@ const CustomerController = {
     },
     insertCustomerFromPartner: async (req, res, next) => {
         const {body, partner} = req
-        console.log("BODY REQUEST " + body)
+        console.log(body)
         const listCustomer = body.list_customer
         const totalRecords = listCustomer.length
         const batchSize = 500
