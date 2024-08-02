@@ -9,26 +9,21 @@ const PartnerController = {
     createPartner: async (req, res) => {
         const {body} = req
         try {
-            if(body.key == "nghiemlamhust1Abc@") { // Để tạm sau sẽ có Authorization
-                const keyBuffer = crypto.randomBytes(24);
-                const base64Key = keyBuffer.toString('base64');
-                const salt = await bcrypt.genSalt(10);
-                const hashed = await bcrypt.hash(base64Key, salt);
-                const newPartner = new PartnerModel({
-                    partner_code: body.partner_code,
-                    partner_name: body.partner_name,
-                    key_tracking: hashed
-                })
-                await newPartner.save()
-                res.json(SuccessResponse({
-                    partner_code: body.partner_code,
-                    partner_name: body.partner_name,
-                    key_tracking: base64Key
-                }))
-            }
-            else {
-                res.send("401")
-            }
+            const keyBuffer = crypto.randomBytes(24);
+            const base64Key = keyBuffer.toString('base64');
+            const salt = await bcrypt.genSalt(10);
+            const hashed = await bcrypt.hash(base64Key, salt);
+            const newPartner = new PartnerModel({
+                partner_code: body.partner_code,
+                partner_name: body.partner_name,
+                key_tracking: hashed
+            })
+            await newPartner.save()
+            res.json(SuccessResponse({
+                partner_code: body.partner_code,
+                partner_name: body.partner_name,
+                key_tracking: base64Key
+            }))
         } catch (error) {
             res.send(error)
         }

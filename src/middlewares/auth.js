@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const PartnerModel = require('../models/PartnerModel');
+const AccountModel = require('../models/AccountModel');
 const { FailureResponse } = require('../utils/ResponseRequest');
 
 const auth = {
@@ -25,6 +26,38 @@ const auth = {
                     } catch (error) {
                         console.log(error)
                         res.json(FailureResponse("08", error))
+                    }
+                    
+                }
+            })
+        }
+        else {
+            res.json(FailureResponse('09'))
+            console.log("Not Authenticated")
+        }
+    },
+
+    verifyAccount: (req, res, next) => {
+        const token = req.headers.authorization;
+        if(token) {
+            const accessToken = token.split(" ")[1];
+            jwt.verify(accessToken, process.env.SECRET_KEY_ACCOUNT, async (err, user) => {
+                if(err) {
+                    res.json(FailureResponse('07'))
+                }
+                else {
+                    req.user = user;
+                    try {
+                        const validatedUser = await AccountModel.findById(user.id)
+                        if(!validatedUser?.isDelete) {
+                            next();
+                        }
+                        else {
+                            res.json(FailureResponse("12"))
+                        }
+                    } catch (error) {
+                        console.log(error)
+                        res.json(FailureResponse("13", error))
                     }
                     
                 }
