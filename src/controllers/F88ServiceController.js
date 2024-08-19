@@ -67,6 +67,53 @@ const F88ServiceController = {
         } catch (error) {
             res.json(FailureResponse("04", error))
         }
+    },
+    pushData: async(req, res) => {
+        try {
+            const requestId = new Date().getTime().toString()
+            const data = await CustomerModel.aggregate([
+                {$limit: 5},
+                {
+                    $lookup: {
+                        from: 'identitycustomers',
+                        localField: 'phone_number',
+                        foreignField: 'phone_number',
+                        as: 'identities'
+                    }
+                },
+                { $unwind: '$identities' },
+            ])
+            const dataPush = data.map((item) => {
+                return {
+                    CampaignId: 2,
+                    SourceId: 393,
+                    AssetTypeId: 17,
+                    PhoneNumber: item.phone_number,
+                    TrackingId: "VNFITE_F88",
+                    FullName: item.full_name,
+                    Address: item.identities.address
+                }
+            })
+            const response = await axios.post('https://api-pn.f88.vn/api/v1/POL/AddNewForm', {
+                PartnerCode: "VNFITE",
+                RequestId: requestId,
+                Data: dataPush
+            });
+            if(response.data.ErrorCode == "200") {
+                res.json(SuccessResponse({
+                    request_id: requestId,
+                    message: "Đẩy đơn thành công"
+                }))
+            } else {
+                res.json(FailureResponse("03", {
+                    data: response.data,
+                    request_id: requestId,
+                }))
+            }
+        } catch (error) {
+            console.log(error)
+        }
+        
     }
 }
 
