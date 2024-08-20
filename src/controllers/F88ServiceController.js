@@ -1,6 +1,8 @@
 const { default: axios } = require("axios")
 const CustomerModel = require("../models/CustomerModel")
 const { SuccessResponse, FailureResponse } = require("../utils/ResponseRequest")
+const { default: mongoose } = require("mongoose")
+const FormPushF88Model = require("../models/FormPushF88Model")
 
 const F88ServiceController = {
     pushDocumentRequest: async (req, res) => {
@@ -35,7 +37,7 @@ const F88ServiceController = {
                 })
                 await newCustomer.save()
             }
-            const response = await axios.post('https://api-ida-pn.f88.co/api/v1/POL/AddNewForm', {
+            const response = await axios.post(process.env.F88_API, {
                 PartnerCode: "VNFITE",
                 RequestId: requestId,
                 Data: [
@@ -69,10 +71,13 @@ const F88ServiceController = {
         }
     },
     pushData: async(req, res) => {
+        const session = await mongoose.startSession();
+        session.startTransaction();
         try {
             const requestId = new Date().getTime().toString()
             const data = await CustomerModel.aggregate([
-                {$limit: 5},
+                {$match: {is_active: false}},
+                {$limit: 200},
                 {
                     $lookup: {
                         from: 'identitycustomers',
@@ -82,7 +87,7 @@ const F88ServiceController = {
                     }
                 },
                 { $unwind: '$identities' },
-            ])
+            ]).session(session)
             const dataPush = data.map((item) => {
                 return {
                     CampaignId: 2,
@@ -94,12 +99,25 @@ const F88ServiceController = {
                     Address: item.identities.address
                 }
             })
-            const response = await axios.post('https://api-pn.f88.vn/api/v1/POL/AddNewForm', {
+            const response = await axios.post(process.env.F88_API, {
                 PartnerCode: "VNFITE",
                 RequestId: requestId,
                 Data: dataPush
             });
             if(response.data.ErrorCode == "200") {
+                const customerIds = data.map(doc => doc._id);
+                const now = new Date(); // Lấy ngày giờ hiện tại
+                const day = String(now.getDate()).padStart(2, '0'); // Lấy ngày và đảm bảo có 2 chữ số
+                const month = String(now.getMonth() + 1).padStart(2, '0'); // Lấy tháng (0-11) và chuyển về 1-12
+                const year = now.getFullYear(); // Lấy năm
+                const listForm = data.map((item) => {
+                    return {
+                        id_customer: item._id,
+                        date: `${day}/${month}/${year}`,
+                    }
+                })
+                await CustomerModel.updateMany({ _id: { $in: customerIds } }, { $set: { is_active: true }}, {session});
+                await FormPushF88Model.insertMany(listForm, {session})
                 res.json(SuccessResponse({
                     request_id: requestId,
                     message: "Đẩy đơn thành công"
@@ -110,8 +128,12 @@ const F88ServiceController = {
                     request_id: requestId,
                 }))
             }
+            await session.commitTransaction();
+            session.endSession();
         } catch (error) {
-            console.log(error)
+            await session.abortTransaction();
+            session.endSession();
+            res.json(FailureResponse("04", error))
         }
         
     }
