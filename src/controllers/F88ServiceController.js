@@ -104,6 +104,8 @@ const F88ServiceController = {
                 RequestId: requestId,
                 Data: dataPush
             });
+            console.log("F88 Response ")
+            console.log(response.data)
             if(response.data.ErrorCode == "200") {
                 const customerIds = data.map(doc => doc._id);
                 const now = new Date(); // Lấy ngày giờ hiện tại
