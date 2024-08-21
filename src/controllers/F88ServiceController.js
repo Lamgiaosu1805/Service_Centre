@@ -77,7 +77,7 @@ const F88ServiceController = {
             const requestId = new Date().getTime().toString()
             const data = await CustomerModel.aggregate([
                 {$match: {is_active: false}},
-                {$limit: 200},
+                {$limit: 30},
                 {
                     $lookup: {
                         from: 'identitycustomers',
