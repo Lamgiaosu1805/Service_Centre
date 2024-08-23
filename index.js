@@ -4,8 +4,26 @@ const route = require('./src/routes')
 const morgan = require('morgan')
 const db = require('./src/config/connectdb')
 const cors = require('cors');
-
+const schedule = require('node-schedule')
+const { pushDocument } = require('./src/controllers/F88ServiceController')
 require('dotenv').config();
+
+//===================== JOB===============
+const pushDocumentJob = async () => {
+  const hour = new Date().getHours()
+  if(hour == 9 || hour == 15) {
+    await pushDocument(false, null, 30)
+  }
+  else {
+    await pushDocument(false, null, 40)
+  }
+}
+const rule = new schedule.RecurrenceRule()
+rule.dayOfWeek = [1, 2, 3, 4, 5];
+rule.hour = [8, 9, 10, 13, 14, 15];
+rule.minute = 30
+schedule.scheduleJob(rule, pushDocumentJob)
+//===================== JOB=================
 
 //use middlewares
 app.use(morgan('dev'))
