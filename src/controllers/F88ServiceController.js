@@ -85,7 +85,11 @@ const pushDocument = async (isApi, res, numberCustomer) => {
     } catch (error) {
         await session.abortTransaction();
         session.endSession();
+        isApi == true
+        ?
         res.json(FailureResponse("04", error))
+        : 
+        console.log(error)
     }
 } 
 

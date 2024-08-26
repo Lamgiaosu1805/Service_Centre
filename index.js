@@ -11,7 +11,7 @@ require('dotenv').config();
 //===================== JOB===============
 const pushDocumentJob = async () => {
   const hour = new Date().getHours()
-  if(hour == 9 || hour == 15) {
+  if(hour == 8 || hour == 15) {
     await pushDocument(false, null, 30)
   }
   else {
