@@ -9,8 +9,10 @@ const pushDocument = async (isApi, res, numberCustomer) => {
     session.startTransaction();
     try {
         const requestId = new Date().getTime().toString()
+        const numberData = await FormPushF88Model.countDocuments()
+        console.log(numberData)
         const data = await CustomerModel.aggregate([
-            {$match: {is_active: false}},
+            // {$match: {is_active: false}},
             {$limit: numberCustomer},
             {
                 $lookup: {
@@ -22,17 +24,18 @@ const pushDocument = async (isApi, res, numberCustomer) => {
             },
             { $unwind: '$identities' },
         ]).session(session)
-        const dataPush = data.map((item) => {
+        const dataPush = data.map((item, index) => {
             return {
                 CampaignId: 2,
                 SourceId: 393,
                 AssetTypeId: 17,
                 PhoneNumber: item.phone_number,
-                TrackingId: "VNFITE_F88",
+                TrackingId: `VNFITE_F88_${numberData + index + 1}`,
                 FullName: item.full_name,
                 Address: item.identities.address
             }
         })
+        console.log(dataPush)
         const response = await axios.post(process.env.F88_API, {
             PartnerCode: "VNFITE",
             RequestId: requestId,
@@ -53,7 +56,7 @@ const pushDocument = async (isApi, res, numberCustomer) => {
                 }
             })
             console.log(listForm)
-            await CustomerModel.updateMany({ _id: { $in: customerIds } }, { $set: { is_active: true }}, {session});
+            // await CustomerModel.updateMany({ _id: { $in: customerIds } }, { $set: { is_active: true }}, {session});
             await FormPushF88Model.insertMany(listForm, {session})
             isApi == true
             ?
@@ -160,7 +163,47 @@ const F88ServiceController = {
         }
     },
     pushData: async(req, res) => {
-        await pushDocument(true, res, 30)
+        await pushDocument(true, res, 5)
+    },
+    callbackResultPOL: async(req, res) => {
+        const {body} = req
+        try {
+            console.log("===========F88 Callback============")
+            console.log(body)
+            if(body.PartnerCode === "F88") {
+                res.json(SuccessResponse({
+                    ErrorCode: "200",
+                    ErrorMessage: "Thành công"
+                }))
+            }
+            else {
+                res.json(FailureResponse("05"))
+            }
+            console.log("===================================")
+        } catch (error) {
+            console.log(error)
+            res.json(FailureResponse("16", error))
+        }
+    },
+    callbackStatusPOL: async(req, res) => {
+        const {body} = req
+        try {
+            console.log("===========F88 Callback============")
+            console.log(body)
+            if(body.PartnerCode === "F88") {
+                res.json(SuccessResponse({
+                    ErrorCode: "200",
+                    ErrorMessage: "Thành công"
+                }))
+            }
+            else {
+                res.json(FailureResponse("05"))
+            }
+            console.log("===================================")
+        } catch (error) {
+            console.log(error)
+            res.json(FailureResponse("17", error))
+        }
     }
 }
 

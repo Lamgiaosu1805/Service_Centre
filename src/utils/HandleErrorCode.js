@@ -9,7 +9,7 @@ const HandleErrorCode = (errorCode) => {
         case "04":
             return `Error:${errorCode}, Có lỗi khi đẩy đơn sang F88`;
         case "05":
-            return `Error:${errorCode}, Đối tác không tồn tại`;
+            return `Error:${errorCode}, Thông tin đối tác không hợp lệ`;
         case "06":
             return `Error:${errorCode}, Có lỗi khi generate accessToken`;
         case "07":
@@ -30,6 +30,10 @@ const HandleErrorCode = (errorCode) => {
             return `Error:${errorCode}, User không tồn tại`;
         case "15":
             return `Error:${errorCode}, Có lỗi khi đăng nhập`;
+        case "16":
+            return `Error:${errorCode}, Có lỗi khi push kết quả tạo đơn`;
+        case "17":
+            return `Error:${errorCode}, Có lỗi khi push trạng thái đơn`;
         default:
             return "Error: " + errorCode + ", Lỗi không xác định";
     }
