@@ -10,7 +10,6 @@ const pushDocument = async (isApi, res, numberCustomer) => {
     try {
         const requestId = new Date().getTime().toString()
         const numberData = await FormPushF88Model.countDocuments()
-        console.log(numberData)
         const data = await CustomerModel.aggregate([
             // {$match: {is_active: false}},
             {$limit: numberCustomer},
@@ -29,7 +28,7 @@ const pushDocument = async (isApi, res, numberCustomer) => {
                 CampaignId: 2,
                 SourceId: 393,
                 AssetTypeId: 17,
-                PhoneNumber: item.phone_number,
+                PhoneNumber: `0912705${numberData + index + 1}`,
                 TrackingId: `VNFITE_F88_${numberData + index + 1}`,
                 FullName: item.full_name,
                 Address: item.identities.address
@@ -175,9 +174,14 @@ const F88ServiceController = {
                     ErrorCode: "200",
                     ErrorMessage: "Thành công"
                 }))
+                console.log(SuccessResponse({
+                    ErrorCode: "200",
+                    ErrorMessage: "Thành công"
+                }))
             }
             else {
                 res.json(FailureResponse("05"))
+                console.log(FailureResponse("05"))
             }
             console.log("===================================")
         } catch (error) {
