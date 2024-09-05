@@ -34,6 +34,10 @@ const HandleErrorCode = (errorCode) => {
             return `Error:${errorCode}, Có lỗi khi push kết quả tạo đơn`;
         case "17":
             return `Error:${errorCode}, Có lỗi khi push trạng thái đơn`;
+        case "18":
+            return `Error:${errorCode}, Có lỗi khi update kết quả tạo đơn`;
+        case "19":
+            return `Error:${errorCode}, Có lỗi khi update trạng thái đơn`;
         default:
             return "Error: " + errorCode + ", Lỗi không xác định";
     }
