@@ -28,7 +28,7 @@ const pushDocument = async (isApi, res, numberCustomer) => {
                 CampaignId: 2,
                 SourceId: 393,
                 AssetTypeId: 17,
-                PhoneNumber: `0912705${numberData + index + 1}`,
+                PhoneNumber: `09127058${numberData + index + 1}`,
                 TrackingId: `VNFITE_F88_${numberData + index + 1}`,
                 FullName: item.full_name,
                 Address: item.identities.address
@@ -48,10 +48,11 @@ const pushDocument = async (isApi, res, numberCustomer) => {
             const day = String(now.getDate()).padStart(2, '0'); // Lấy ngày và đảm bảo có 2 chữ số
             const month = String(now.getMonth() + 1).padStart(2, '0'); // Lấy tháng (0-11) và chuyển về 1-12
             const year = now.getFullYear(); // Lấy năm
-            const listForm = data.map((item) => {
+            const listForm = data.map((item, index) => {
                 return {
                     id_customer: item._id,
                     date: `${day}/${month}/${year}`,
+                    tracking_id: `VNFITE_F88_${numberData + index + 1}`
                 }
             })
             console.log(listForm)
@@ -85,6 +86,7 @@ const pushDocument = async (isApi, res, numberCustomer) => {
         await session.commitTransaction();
         session.endSession();
     } catch (error) {
+        console.log(error)
         await session.abortTransaction();
         session.endSession();
         isApi == true
@@ -169,6 +171,13 @@ const F88ServiceController = {
         try {
             console.log("===========F88 Callback============")
             console.log(body)
+            for(let i = 0; i < body.length; i++) {
+                try {
+                    await FormPushF88Model.findOneAndUpdate({tracking_id: body[i].trackingId}, {id_Pol: body[i].idPol, result_push: body[i].status, canceled_reason: body[i].canceledReason})
+                } catch (error) {
+                    console.log(error)
+                }
+            }
             res.json(SuccessResponse({
                 ErrorCode: "200",
                 ErrorMessage: "Thành công"

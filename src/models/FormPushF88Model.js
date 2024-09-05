@@ -11,7 +11,8 @@ const FormPushF88 = new Schema({
     status: { type: Number, default: -1 },
     price_debit: { type: String, default: "" },
     insurance: {type: String, default: ""},
-    canceled_reason: {type: String, default: ""}
+    canceled_reason: {type: String, default: ""},
+    tracking_id: {type: String, default: ""}
 }, {
     timestamps: true
 })
