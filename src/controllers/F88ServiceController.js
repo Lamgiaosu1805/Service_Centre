@@ -169,20 +169,14 @@ const F88ServiceController = {
         try {
             console.log("===========F88 Callback============")
             console.log(body)
-            if(body.PartnerCode === "F88") {
-                res.json(SuccessResponse({
-                    ErrorCode: "200",
-                    ErrorMessage: "Thành công"
-                }))
-                console.log(SuccessResponse({
-                    ErrorCode: "200",
-                    ErrorMessage: "Thành công"
-                }))
-            }
-            else {
-                res.json(FailureResponse("05"))
-                console.log(FailureResponse("05"))
-            }
+            res.json(SuccessResponse({
+                ErrorCode: "200",
+                ErrorMessage: "Thành công"
+            }))
+            console.log(SuccessResponse({
+                ErrorCode: "200",
+                ErrorMessage: "Thành công"
+            }))
             console.log("===================================")
         } catch (error) {
             console.log(error)
@@ -194,15 +188,14 @@ const F88ServiceController = {
         try {
             console.log("===========F88 Callback============")
             console.log(body)
-            if(body.PartnerCode === "F88") {
-                res.json(SuccessResponse({
-                    ErrorCode: "200",
-                    ErrorMessage: "Thành công"
-                }))
-            }
-            else {
-                res.json(FailureResponse("05"))
-            }
+            res.json(SuccessResponse({
+                ErrorCode: "200",
+                ErrorMessage: "Thành công"
+            }))
+            console.log(SuccessResponse({
+                ErrorCode: "200",
+                ErrorMessage: "Thành công"
+            }))
             console.log("===================================")
         } catch (error) {
             console.log(error)
