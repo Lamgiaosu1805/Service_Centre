@@ -3,6 +3,7 @@ const CustomerModel = require("../models/CustomerModel")
 const { SuccessResponse, FailureResponse } = require("../utils/ResponseRequest")
 const { default: mongoose } = require("mongoose")
 const FormPushF88Model = require("../models/FormPushF88Model")
+const IdentityCustomer = require("../models/IdentityCustomer")
 
 const pushDocument = async (isApi, res, numberCustomer) => {
     const session = await mongoose.startSession();
@@ -95,8 +96,14 @@ const pushDocument = async (isApi, res, numberCustomer) => {
 
 const F88ServiceController = {
     pushDocumentRequest: async (req, res) => {
+        const session = await mongoose.startSession();
+        session.startTransaction();
         const body = req.body
         const requestId = new Date().getTime().toString()
+        const now = new Date(); // Lấy ngày giờ hiện tại
+        const day = String(now.getDate()).padStart(2, '0'); // Lấy ngày và đảm bảo có 2 chữ số
+        const month = String(now.getMonth() + 1).padStart(2, '0'); // Lấy tháng (0-11) và chuyển về 1-12
+        const year = now.getFullYear(); // Lấy năm
         try {
             const customer = await CustomerModel.findOne({cccd: body.cccd})
             if(customer) {
@@ -110,12 +117,11 @@ const F88ServiceController = {
                     make_by: "FORM",
                     city: body.city_name,
                     district: body.district_name
-                })
+                }, {session})
             }
             else {
                 const newCustomer = new CustomerModel({
                     full_name: body.full_name,
-                    cccd: body.cccd,
                     phone_number: body.phone_number,
                     mail: body.mail,
                     address: body.address,
@@ -124,39 +130,58 @@ const F88ServiceController = {
                     city: body.city_name,
                     district: body.district_name
                 })
-                await newCustomer.save()
+                const newCustomerInserted = await newCustomer.save({session})
+
+                const newIdentityCustomer = new IdentityCustomer({
+                    cccd: body.cccd,
+                    date_range: body.date_range ?? "Chưa cung cấp",
+                    issued_by: body.issued_by ?? "Chưa cung cấp",
+                    address: body.address,
+                    permanent_address: body.permanent_address,
+                    birth: body.birth,
+                    gender: body.gender,
+                    phone_number: body.phone_number
+                })
+                await newIdentityCustomer.save({session})
+
+                const newFormPush = new FormPushF88Model({
+                    id_customer: newCustomerInserted._id,
+                    date: `${day}/${month}/${year}`,
+                    asset_type_id: body.asset_type_id,
+                    price_debit: body.money
+                })
+                await newFormPush.save({session})
             }
-            const response = await axios.post(process.env.F88_API, {
-                PartnerCode: "VNFITE",
-                RequestId: requestId,
-                Data: [
-                    {
-                        CampaignId: 2,
-                        SourceId: 393,
-                        AssetTypeId: body.asset_type_id,
-                        PhoneNumber: body.phone_number,
-                        TrackingId: "VNFITE_F88",
-                        FullName: body.full_name,
-                        Address: body.address,
-                        CityId: body.city_id,
-                        DistrictId: body.district_id,
-                        Money: body.money
-                    }
-                ]
-            });
-            if(response.data.ErrorCode == "200") {
-                res.json(SuccessResponse({
-                    request_id: requestId,
-                    message: "Đẩy đơn thành công"
-                }))
-            } else {
-                res.json(FailureResponse("03", {
-                    data: response.data,
-                    request_id: requestId,
-                }))
-            }
+            // const response = await axios.post(process.env.F88_API, {
+            //     PartnerCode: "VNFITE",
+            //     RequestId: requestId,
+            //     Data: [
+            //         {
+            //             CampaignId: 2,
+            //             SourceId: 393,
+            //             AssetTypeId: body.asset_type_id,
+            //             PhoneNumber: body.phone_number,
+            //             TrackingId: "VNFITE_F88",
+            //             FullName: body.full_name,
+            //             Address: body.address,
+            //             CityId: body.city_id,
+            //             DistrictId: body.district_id,
+            //             Money: body.money
+            //         }
+            //     ]
+            // });
+            res.json(SuccessResponse({
+                request_id: requestId,
+                message: "Đẩy đơn thành công"
+            }))
+            
+            await session.commitTransaction();
+            session.endSession();
         } catch (error) {
+            console.log(error)
             res.json(FailureResponse("04", error))
+            await session.abortTransaction();
+            session.endSession();
         }
     },
     pushData: async(req, res) => {
