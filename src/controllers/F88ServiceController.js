@@ -55,7 +55,7 @@ const pushDocument = async (isApi, res, numberCustomer) => {
             })
             console.log(listForm)
             await CustomerModel.updateMany({ _id: { $in: customerIds } }, { $set: { is_active: true }}, {session});
-            await FormPushF88Model.insertMany(listForm, {session})
+            // await FormPushF88Model.insertMany(listForm, {session})
             isApi == true
             ?
             res.json(SuccessResponse({
