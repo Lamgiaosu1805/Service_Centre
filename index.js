@@ -23,7 +23,7 @@ const rule = new schedule.RecurrenceRule()
 rule.dayOfWeek = [1, 2, 3, 4, 5];
 rule.hour = [10, 13, 15];
 rule.minute = 30
-schedule.scheduleJob(rule, pushDocumentJob)
+// schedule.scheduleJob(rule, pushDocumentJob)
 //===================== JOB=================
 
 //use middlewares
