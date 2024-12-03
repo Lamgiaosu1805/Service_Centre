@@ -5,5 +5,6 @@ const router = express.Router()
 
 router.post('/pushDon', F88.F88ServiceController.pushDocumentRequest);
 router.post('/pushData', auth.verifyAccount, F88.F88ServiceController.pushData);
+router.post('/filterDataForMonth', auth.verifyAccount, F88.F88ServiceController.getSoLuongDataThang);
 
 module.exports = router;

@@ -186,7 +186,28 @@ const F88ServiceController = {
     },
     pushData: async(req, res) => {
         await pushDocument(true, res, 30)
+    },
+    getSoLuongDataThang: async(req, res) => {
+        const {body} = req;
+        try {
+            const records = await FormPushF88Model.find({
+                $expr: {
+                  $and: [
+                    { $eq: [{ $arrayElemAt: [{ $split: ["$date", "/"] }, 1] }, body.month] }, // So sánh tháng
+                    { $eq: [{ $arrayElemAt: [{ $split: ["$date", "/"] }, 2] }, body.year] }   // So sánh năm
+                  ]
+                }
+              });
+          
+              res.json(SuccessResponse({
+                totalRecord: records.length,
+                records: records
+              })); // Trả về kết quả
+        } catch (error) {
+            console.log(error)
+        }
     }
+
 }
 
 module.exports = {F88ServiceController, pushDocument}
