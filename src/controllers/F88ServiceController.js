@@ -92,7 +92,25 @@ const pushDocument = async (isApi, res, numberCustomer) => {
         : 
         console.log(error)
     }
-} 
+}
+
+function formatDate(date) {
+    let day = date.getDate().toString().padStart(2, '0');
+    let month = (date.getMonth() + 1).toString().padStart(2, '0'); // Tháng bắt đầu từ 0
+    let year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+}
+
+function getLastForDays(numberDate) {
+    let today = new Date();
+    let dates = [];
+    for (let i = 1; i <= numberDate; i++) {
+        let pastDate = new Date(today);
+        pastDate.setDate(today.getDate() - i);
+        dates.push(formatDate(pastDate));
+    }
+    return dates;
+}
 
 const F88ServiceController = {
     pushDocumentRequest: async (req, res) => {
@@ -205,8 +223,27 @@ const F88ServiceController = {
               })); // Trả về kết quả
         } catch (error) {
             console.log(error)
+            res.json(FailureResponse("16", error))
         }
-    }
+    },
+    getNumberOfDataForDate: async(req, res) => {
+        try {
+            const data = []
+            const listDay = getLastForDays(7)
+            const results = await Promise.all(
+                listDay.map(async (date) => {
+                    const count = await FormPushF88Model.countDocuments({ date }); // Truy vấn theo ngày
+                    return { date, count };
+                })
+            )
+            res.json(SuccessResponse(results)) // Trả về kết quả
+            console.log(data)
+        } catch (error) {
+            console.log(error)
+            res.json(FailureResponse("17", error))
+        }
+    },
+    
 
 }
 

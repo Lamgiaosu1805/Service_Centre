@@ -30,6 +30,10 @@ const HandleErrorCode = (errorCode) => {
             return `Error:${errorCode}, User không tồn tại`;
         case "15":
             return `Error:${errorCode}, Có lỗi khi đăng nhập`;
+        case "16":
+            return `Error:${errorCode}, Có lỗi khi lấy số lượng data tháng`;
+        case "17":
+            return `Error:${errorCode}, Có lỗi khi lấy số lượng data theo ngày`;
         default:
             return "Error: " + errorCode + ", Lỗi không xác định";
     }
