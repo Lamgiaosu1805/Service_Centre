@@ -229,7 +229,7 @@ const F88ServiceController = {
     getNumberOfDataForDate: async(req, res) => {
         try {
             const data = []
-            const listDay = getLastForDays(7)
+            const listDay = getLastForDays(300)
             const results = await Promise.all(
                 listDay.map(async (date) => {
                     const count = await FormPushF88Model.countDocuments({ date }); // Truy vấn theo ngày
