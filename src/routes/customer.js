@@ -7,4 +7,6 @@ const router = express.Router()
 router.post('/verifyCustomer', CustomerController.verifyCustomer);
 router.post('/insert-customer-partner', auth.verifyToken, upload.single('file'), CustomerController.insertCustomerFromPartner);
 
+router.get('/:customerId', auth.verifyAccount, CustomerController.getCustomerInfo);
+
 module.exports = router;

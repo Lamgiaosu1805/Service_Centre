@@ -36,6 +36,8 @@ const HandleErrorCode = (errorCode) => {
             return `Error:${errorCode}, Có lỗi khi lấy số lượng data theo ngày`;
         case "18":
             return `Error:${errorCode}, Có lỗi khi lấy danh sách khách hàng theo ngày`;
+        case "19":
+            return `Error:${errorCode}, Có lỗi khi lấy thông tin khách hàng`;
         default:
             return "Error: " + errorCode + ", Lỗi không xác định";
     }
