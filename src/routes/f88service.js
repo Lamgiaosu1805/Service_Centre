@@ -8,6 +8,7 @@ router.post('/pushData', auth.verifyAccount, F88.F88ServiceController.pushData);
 router.post('/filterDataForMonth', auth.verifyAccount, F88.F88ServiceController.getSoLuongDataThang);
 
 router.get('/getNumberOfDataForDate', auth.verifyAccount, F88.F88ServiceController.getNumberOfDataForDate);
+router.get('/listDataForDate', auth.verifyAccount, F88.F88ServiceController.getDanhSachKhachHangTheoNgay);
 
 
 module.exports = router;

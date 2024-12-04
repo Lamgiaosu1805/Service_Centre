@@ -243,7 +243,25 @@ const F88ServiceController = {
             res.json(FailureResponse("17", error))
         }
     },
-    
+    getDanhSachKhachHangTheoNgay: async(req, res) => {
+        const { query } = req
+        try {
+            const {date} = query
+            const listData = await FormPushF88Model.find({date: date}).populate('id_customer').lean()
+            const modifiedlistData = listData.map((form) => {
+                form.customer_info = form.id_customer
+                delete form.id_customer
+                return form;
+            });
+            res.json(SuccessResponse({
+                total: modifiedlistData.length,
+                data: modifiedlistData
+            }))
+        } catch (error) {
+            console.log(error)
+            res.json(FailureResponse("18", error))
+        }
+    }
 
 }
 

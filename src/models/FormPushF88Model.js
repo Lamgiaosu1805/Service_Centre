@@ -3,7 +3,7 @@ const Schema = mongoose.Schema
 
 const FormPushF88 = new Schema({
     id_Pol: { type: String, default: ""}, // Sau khi F88 callback sẽ update lại giá trị
-    id_customer: { type: String, required: true },
+    id_customer: { type: String, required: true, ref: 'customer' },
     date: {type: String, required: true},
      // result_push: 1, Thành côg; 0, thất bại; #
     result_push: { type: Number, default: -1 },
