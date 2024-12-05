@@ -268,7 +268,7 @@ const F88ServiceController = {
             const idCustomer = body.idCustomer
             const trangThaiSauCallReport = body.status
             const cancelReson = body.status == 3 ? body.cancelReson : ""
-            await FormPushF88Model.findByIdAndUpdate(idCustomer, {status: trangThaiSauCallReport, canceled_reason: cancelReson})
+            await FormPushF88Model.findOneAndUpdate({id_customer: idCustomer}, {status: trangThaiSauCallReport, canceled_reason: cancelReson})
             res.json(SuccessResponse())
         } catch (error) {
             console.log(error)
