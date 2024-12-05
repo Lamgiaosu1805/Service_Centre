@@ -38,6 +38,8 @@ const HandleErrorCode = (errorCode) => {
             return `Error:${errorCode}, Có lỗi khi lấy danh sách khách hàng theo ngày`;
         case "19":
             return `Error:${errorCode}, Có lỗi khi lấy thông tin khách hàng`;
+        case "20":
+            return `Error:${errorCode}, Có lỗi khi cập nhật trạng thái form push`;
         default:
             return "Error: " + errorCode + ", Lỗi không xác định";
     }

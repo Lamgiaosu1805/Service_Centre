@@ -261,6 +261,19 @@ const F88ServiceController = {
             console.log(error)
             res.json(FailureResponse("18", error))
         }
+    },
+    capNhatTrangThaiSauKhiCallReport: async (req, res) => {
+        const {body} = req
+        try {
+            const idCustomer = body.idCustomer
+            const trangThaiSauCallReport = body.status
+            const cancelReson = body.status == 3 ? body.cancelReson : ""
+            await FormPushF88Model.findByIdAndUpdate(idCustomer, {status: trangThaiSauCallReport, canceled_reason: cancelReson})
+            res.json(SuccessResponse())
+        } catch (error) {
+            console.log(error)
+            res.json(FailureResponse("20", error))
+        }
     }
 
 }
