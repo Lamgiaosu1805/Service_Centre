@@ -12,7 +12,6 @@ const pushDocument = async (isApi, res, numberCustomer) => {
     session.startTransaction();
     try {
         const requestId = new Date().getTime().toString()
-        const numberData = await FormPushF88Model.countDocuments()
         const data = await CustomerModel.aggregate([
             {$match: {is_active: false}},
             {$limit: numberCustomer},
@@ -21,20 +20,34 @@ const pushDocument = async (isApi, res, numberCustomer) => {
                     from: 'identitycustomers',
                     localField: 'phone_number',
                     foreignField: 'phone_number',
-                    as: 'identities'
-                }
+                    as: 'identity'
+                },
             },
-            { $unwind: '$identities' },
+            { $unwind: '$identity' },
+            {
+                $addFields: {
+                    idCustomerString: { $toString: '$_id' } // Tạo trường mới `idCustomerString` dưới dạng string
+                },
+            },
+            {
+                $lookup: {
+                    from: 'formpushf88',
+                    localField: 'idCustomerString',
+                    foreignField: 'id_customer',
+                    as: 'formPushF88'
+                },
+            },
+            { $unwind: '$formPushF88' },
         ]).session(session)
-        const dataPush = data.map((item, index) => {
+        const dataPush = data.map((item) => {
             return {
                 CampaignId: 2,
                 SourceId: 393,
                 AssetTypeId: 17,
                 PhoneNumber: item.phone_number,
-                TrackingId: `VNFITE_F88_${numberData + index + 1}`,
+                TrackingId: item.formPushF88.tracking_id,
                 FullName: item.full_name,
-                Address: item.identities.address
+                Address: item.identity.address
             }
         })
         console.log(dataPush)
@@ -47,18 +60,18 @@ const pushDocument = async (isApi, res, numberCustomer) => {
         console.log(response.data)
         if(response.data.ErrorCode == "200") {
             const customerIds = data.map(doc => doc._id);
-            const now = new Date(); // Lấy ngày giờ hiện tại
-            const day = String(now.getDate()).padStart(2, '0'); // Lấy ngày và đảm bảo có 2 chữ số
-            const month = String(now.getMonth() + 1).padStart(2, '0'); // Lấy tháng (0-11) và chuyển về 1-12
-            const year = now.getFullYear(); // Lấy năm
-            const listForm = data.map((item, index) => {
-                return {
-                    id_customer: item._id,
-                    date: `${day}/${month}/${year}`,
-                    tracking_id: `VNFITE_F88_${numberData + index + 1}`
-                }
-            })
-            console.log(listForm)
+            // const now = new Date(); // Lấy ngày giờ hiện tại
+            // const day = String(now.getDate()).padStart(2, '0'); // Lấy ngày và đảm bảo có 2 chữ số
+            // const month = String(now.getMonth() + 1).padStart(2, '0'); // Lấy tháng (0-11) và chuyển về 1-12
+            // const year = now.getFullYear(); // Lấy năm
+            // const listForm = data.map((item, index) => {
+            //     return {
+            //         id_customer: item._id,
+            //         date: `${day}/${month}/${year}`,
+            //         tracking_id: `VNFITE_F88_${numberData + index + 1}`
+            //     }
+            // })
+            // console.log(listForm)
             await CustomerModel.updateMany({ _id: { $in: customerIds } }, { $set: { is_active: true }}, {session});
             // await FormPushF88Model.insertMany(listForm, {session})
             isApi == true
@@ -167,33 +180,16 @@ const F88ServiceController = {
                     phone_number: body.phone_number
                 })
                 await newIdentityCustomer.save({session})
-
+                const numberData = await FormPushF88Model.countDocuments()
                 const newFormPush = new FormPushF88Model({
                     id_customer: newCustomerInserted._id,
                     date: `${day}/${month}/${year}`,
                     asset_type_id: body.asset_type_id,
-                    price_debit: body.money
+                    price_debit: body.money,
+                    tracking_id: `VNFITE_F88_${numberData + index + 1}`
                 })
                 await newFormPush.save({session})
             }
-            // const response = await axios.post(process.env.F88_API, {
-            //     PartnerCode: "VNFITE",
-            //     RequestId: requestId,
-            //     Data: [
-            //         {
-            //             CampaignId: 2,
-            //             SourceId: 393,
-            //             AssetTypeId: body.asset_type_id,
-            //             PhoneNumber: body.phone_number,
-            //             TrackingId: "VNFITE_F88",
-            //             FullName: body.full_name,
-            //             Address: body.address,
-            //             CityId: body.city_id,
-            //             DistrictId: body.district_id,
-            //             Money: body.money
-            //         }
-            //     ]
-            // });
             res.json(SuccessResponse({
                 request_id: requestId,
                 message: "Đẩy đơn thành công"
