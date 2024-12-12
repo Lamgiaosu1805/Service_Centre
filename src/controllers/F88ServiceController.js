@@ -31,7 +31,7 @@ const pushDocument = async (isApi, res, numberCustomer) => {
                 CampaignId: 2,
                 SourceId: 393,
                 AssetTypeId: 17,
-                PhoneNumber: `09127058${numberData + index + 1}`,// Cần sửa lại
+                PhoneNumber: item.phone_number,
                 TrackingId: `VNFITE_F88_${numberData + index + 1}`,
                 FullName: item.full_name,
                 Address: item.identities.address
