@@ -3,6 +3,8 @@ const CustomerModel = require("../models/CustomerModel")
 const { SuccessResponse, FailureResponse } = require("../utils/ResponseRequest")
 const { default: mongoose } = require("mongoose")
 const FormPushF88Model = require("../models/FormPushF88Model")
+const HandleErrorCode = require("../utils/HandleErrorCode")
+
 const IdentityCustomer = require("../models/IdentityCustomer")
 
 const pushDocument = async (isApi, res, numberCustomer) => {
@@ -10,6 +12,7 @@ const pushDocument = async (isApi, res, numberCustomer) => {
     session.startTransaction();
     try {
         const requestId = new Date().getTime().toString()
+        const numberData = await FormPushF88Model.countDocuments()
         const data = await CustomerModel.aggregate([
             {$match: {is_active: false}},
             {$limit: numberCustomer},
@@ -23,17 +26,18 @@ const pushDocument = async (isApi, res, numberCustomer) => {
             },
             { $unwind: '$identities' },
         ]).session(session)
-        const dataPush = data.map((item) => {
+        const dataPush = data.map((item, index) => {
             return {
                 CampaignId: 2,
                 SourceId: 393,
                 AssetTypeId: 17,
                 PhoneNumber: item.phone_number,
-                TrackingId: "VNFITE_F88",
+                TrackingId: `VNFITE_F88_${numberData + index + 1}`,
                 FullName: item.full_name,
                 Address: item.identities.address
             }
         })
+        console.log(dataPush)
         const response = await axios.post(process.env.F88_API, {
             PartnerCode: "VNFITE",
             RequestId: requestId,
@@ -47,10 +51,11 @@ const pushDocument = async (isApi, res, numberCustomer) => {
             const day = String(now.getDate()).padStart(2, '0'); // Lấy ngày và đảm bảo có 2 chữ số
             const month = String(now.getMonth() + 1).padStart(2, '0'); // Lấy tháng (0-11) và chuyển về 1-12
             const year = now.getFullYear(); // Lấy năm
-            const listForm = data.map((item) => {
+            const listForm = data.map((item, index) => {
                 return {
                     id_customer: item._id,
                     date: `${day}/${month}/${year}`,
+                    tracking_id: `VNFITE_F88_${numberData + index + 1}`
                 }
             })
             console.log(listForm)
@@ -84,6 +89,7 @@ const pushDocument = async (isApi, res, numberCustomer) => {
         await session.commitTransaction();
         session.endSession();
     } catch (error) {
+        console.log(error)
         await session.abortTransaction();
         session.endSession();
         isApi == true
@@ -203,7 +209,49 @@ const F88ServiceController = {
         }
     },
     pushData: async(req, res) => {
-        await pushDocument(true, res, 30)
+        await pushDocument(true, res, 5)
+    },
+    callbackResultPOL: async(req, res) => {
+        const {body} = req
+        try {
+            console.log("===========F88 Callback============")
+            console.log(body)
+            const data = []
+            for(let i = 0; i < body.length; i++) {
+                try {
+                    await FormPushF88Model.findOneAndUpdate({tracking_id: body[i].trackingId}, {
+                        id_Pol: body[i].idPol, 
+                        result_push: body[i].status, 
+                        canceled_reason: body[i].canceledReason,
+                    })
+                    data.push({
+                        errorCode: "200",
+                        errorMessage: "Thành công",
+                        trackingId: body[i].trackingId,
+                        idPartnerQueue: body[i].idPartnerQueue
+                    })
+                } catch (error) {
+                    console.log(`tracking_id: ${body[i].trackingId}`)
+                    console.log(error)
+                    data.push({
+                        errorCode: "23",
+                        errorMessage: HandleErrorCode("23"),
+                        trackingId: body[i].trackingId,
+                        idPartnerQueue: body[i].idPartnerQueue
+                    })
+                }
+            }
+            res.json({
+                data: data
+            })
+            console.log({
+                data: data
+            })
+            console.log("===================================")
+        } catch (error) {
+            console.log(error)
+            res.json(FailureResponse("21", error))
+        }
     },
     getSoLuongDataThang: async(req, res) => {
         const {body} = req;
@@ -226,6 +274,50 @@ const F88ServiceController = {
             res.json(FailureResponse("16", error))
         }
     },
+    callbackStatusPOL: async(req, res) => {
+        const {body} = req
+        try {
+            console.log("===========F88 Callback============")
+            console.log(body)
+            const data = []
+            for(let i = 0; i < body.length; i++) {
+                try {
+                    await FormPushF88Model.findOneAndUpdate({tracking_id: body[i].trackingId}, {
+                        id_Pol: body[i].idPol,
+                        status: body[i].status,
+                        last_reason: body[i].lastReason,
+                        price_debit: body[i].price,
+                    })
+                    data.push({
+                        errorCode: "200",
+                        errorMessage: "Thành công",
+                        trackingId: body[i].trackingId,
+                        idPartnerQueue: body[i].idPartnerQueue
+                    })
+                } catch (error) {
+                    console.log(`tracking_id: ${body[i].trackingId}`)
+                    console.log(error)
+                    data.push({
+                        errorCode: "24",
+                        errorMessage: HandleErrorCode("24"),
+                        trackingId: body[i].trackingId,
+                        idPartnerQueue: body[i].idPartnerQueue
+                    })
+                }
+            }
+            res.json({
+                data: data
+            })
+            console.log({
+                data: data
+            })
+            console.log("===================================")
+        } catch (error) {
+            console.log(error)
+            res.json(FailureResponse("22", error))
+        }
+    },  
+
     getNumberOfDataForDate: async(req, res) => {
         try {
             const data = []
