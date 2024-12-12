@@ -10,17 +10,18 @@ require('dotenv').config();
 
 //===================== JOB===============
 const pushDocumentJob = async () => {
-  const hour = new Date().getHours()
-  if(hour == 8 || hour == 15) {
-    await pushDocument(false, null, 30)
-  }
-  else {
-    await pushDocument(false, null, 40)
-  }
+  // const hour = new Date().getHours()
+  await pushDocument(false, null, 10)
+  // if(hour == 8 || hour == 15) {
+  //   await pushDocument(false, null, 30)
+  // }
+  // else {
+  //   await pushDocument(false, null, 40)
+  // }
 }
 const rule = new schedule.RecurrenceRule()
 rule.dayOfWeek = [1, 2, 3, 4, 5];
-rule.hour = [8, 9, 10, 13, 14, 15];
+rule.hour = [10, 13, 15];
 rule.minute = 30
 // schedule.scheduleJob(rule, pushDocumentJob)
 //===================== JOB=================

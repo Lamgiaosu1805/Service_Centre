@@ -31,13 +31,24 @@ const HandleErrorCode = (errorCode) => {
         case "15":
             return `Error:${errorCode}, Có lỗi khi đăng nhập`;
         case "16":
-            return `Error:${errorCode}, Có lỗi khi push kết quả tạo đơn`;
+            return `Error:${errorCode}, Có lỗi khi lấy số lượng data tháng`;
         case "17":
-            return `Error:${errorCode}, Có lỗi khi push trạng thái đơn`;
+            return `Error:${errorCode}, Có lỗi khi lấy số lượng data theo ngày`;
         case "18":
-            return `Error:${errorCode}, Có lỗi khi update kết quả tạo đơn`;
+            return `Error:${errorCode}, Có lỗi khi lấy danh sách khách hàng theo ngày`;
         case "19":
+            return `Error:${errorCode}, Có lỗi khi lấy thông tin khách hàng`;
+        case "20":
+            return `Error:${errorCode}, Có lỗi khi cập nhật trạng thái form push`;
+        case "21":
+            return `Error:${errorCode}, Có lỗi khi push kết quả tạo đơn`;
+        case "22":
+            return `Error:${errorCode}, Có lỗi khi push trạng thái đơn`;
+        case "23":
+            return `Error:${errorCode}, Có lỗi khi update kết quả tạo đơn`;
+        case "24":
             return `Error:${errorCode}, Có lỗi khi update trạng thái đơn`;
+
         default:
             return "Error: " + errorCode + ", Lỗi không xác định";
     }

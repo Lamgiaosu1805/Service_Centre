@@ -1,9 +1,10 @@
 const CustomerModel = require("../models/CustomerModel")
 const LoanNeedModel = require("../models/LoanNeedModel");
-const { SuccessResponse } = require("../utils/ResponseRequest")
+const { SuccessResponse, FailureResponse } = require("../utils/ResponseRequest")
 const mongoose = require('mongoose');
 const ExcelJS = require('exceljs');
 const IdentityCustomer = require("../models/IdentityCustomer");
+const FormPushF88Model = require("../models/FormPushF88Model");
 
 const CustomerController = {
     verifyCustomer: async (req, res, next) => {
@@ -127,6 +128,25 @@ const CustomerController = {
                 res.send(error)
             }
             
+        }
+    },
+    getCustomerInfo: async(req, res) => {
+        const {params} = req
+        try {
+            const customerId = params.customerId
+            const customerInfo = await CustomerModel.findById(customerId).lean()
+            const identityCustomer = await IdentityCustomer.findOne({phone_number: customerInfo.phone_number})
+            const formPush = await FormPushF88Model.findOne({id_customer: customerId})
+            res.json(SuccessResponse({
+                data: {
+                    customerInfo: customerInfo,
+                    identityInfo: identityCustomer,
+                    formPushInfo: formPush
+                }
+            }))
+        } catch (error) {
+            console.log(error)
+            res.json(FailureResponse("19", error))
         }
     }
 }

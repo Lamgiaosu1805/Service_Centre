@@ -5,6 +5,8 @@ const { default: mongoose } = require("mongoose")
 const FormPushF88Model = require("../models/FormPushF88Model")
 const HandleErrorCode = require("../utils/HandleErrorCode")
 
+const IdentityCustomer = require("../models/IdentityCustomer")
+
 const pushDocument = async (isApi, res, numberCustomer) => {
     const session = await mongoose.startSession();
     session.startTransaction();
@@ -12,7 +14,7 @@ const pushDocument = async (isApi, res, numberCustomer) => {
         const requestId = new Date().getTime().toString()
         const numberData = await FormPushF88Model.countDocuments()
         const data = await CustomerModel.aggregate([
-            // {$match: {is_active: false}},
+            {$match: {is_active: false}},
             {$limit: numberCustomer},
             {
                 $lookup: {
@@ -57,8 +59,8 @@ const pushDocument = async (isApi, res, numberCustomer) => {
                 }
             })
             console.log(listForm)
-            // await CustomerModel.updateMany({ _id: { $in: customerIds } }, { $set: { is_active: true }}, {session});
-            await FormPushF88Model.insertMany(listForm, {session})
+            await CustomerModel.updateMany({ _id: { $in: customerIds } }, { $set: { is_active: true }}, {session});
+            // await FormPushF88Model.insertMany(listForm, {session})
             isApi == true
             ?
             res.json(SuccessResponse({
@@ -96,12 +98,36 @@ const pushDocument = async (isApi, res, numberCustomer) => {
         : 
         console.log(error)
     }
-} 
+}
+
+function formatDate(date) {
+    let day = date.getDate().toString().padStart(2, '0');
+    let month = (date.getMonth() + 1).toString().padStart(2, '0'); // Tháng bắt đầu từ 0
+    let year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+}
+
+function getLastForDays(numberDate) {
+    let today = new Date();
+    let dates = [];
+    for (let i = 1; i <= numberDate; i++) {
+        let pastDate = new Date(today);
+        pastDate.setDate(today.getDate() - i);
+        dates.push(formatDate(pastDate));
+    }
+    return dates;
+}
 
 const F88ServiceController = {
     pushDocumentRequest: async (req, res) => {
+        const session = await mongoose.startSession();
+        session.startTransaction();
         const body = req.body
         const requestId = new Date().getTime().toString()
+        const now = new Date(); // Lấy ngày giờ hiện tại
+        const day = String(now.getDate()).padStart(2, '0'); // Lấy ngày và đảm bảo có 2 chữ số
+        const month = String(now.getMonth() + 1).padStart(2, '0'); // Lấy tháng (0-11) và chuyển về 1-12
+        const year = now.getFullYear(); // Lấy năm
         try {
             const customer = await CustomerModel.findOne({cccd: body.cccd})
             if(customer) {
@@ -115,12 +141,11 @@ const F88ServiceController = {
                     make_by: "FORM",
                     city: body.city_name,
                     district: body.district_name
-                })
+                }, {session})
             }
             else {
                 const newCustomer = new CustomerModel({
                     full_name: body.full_name,
-                    cccd: body.cccd,
                     phone_number: body.phone_number,
                     mail: body.mail,
                     address: body.address,
@@ -129,39 +154,58 @@ const F88ServiceController = {
                     city: body.city_name,
                     district: body.district_name
                 })
-                await newCustomer.save()
+                const newCustomerInserted = await newCustomer.save({session})
+
+                const newIdentityCustomer = new IdentityCustomer({
+                    cccd: body.cccd,
+                    date_range: body.date_range ?? "Chưa cung cấp",
+                    issued_by: body.issued_by ?? "Chưa cung cấp",
+                    address: body.address,
+                    permanent_address: body.permanent_address,
+                    birth: body.birth,
+                    gender: body.gender,
+                    phone_number: body.phone_number
+                })
+                await newIdentityCustomer.save({session})
+
+                const newFormPush = new FormPushF88Model({
+                    id_customer: newCustomerInserted._id,
+                    date: `${day}/${month}/${year}`,
+                    asset_type_id: body.asset_type_id,
+                    price_debit: body.money
+                })
+                await newFormPush.save({session})
             }
-            const response = await axios.post(process.env.F88_API, {
-                PartnerCode: "VNFITE",
-                RequestId: requestId,
-                Data: [
-                    {
-                        CampaignId: 2,
-                        SourceId: 393,
-                        AssetTypeId: body.asset_type_id,
-                        PhoneNumber: body.phone_number,
-                        TrackingId: "VNFITE_F88",
-                        FullName: body.full_name,
-                        Address: body.address,
-                        CityId: body.city_id,
-                        DistrictId: body.district_id,
-                        Money: body.money
-                    }
-                ]
-            });
-            if(response.data.ErrorCode == "200") {
-                res.json(SuccessResponse({
-                    request_id: requestId,
-                    message: "Đẩy đơn thành công"
-                }))
-            } else {
-                res.json(FailureResponse("03", {
-                    data: response.data,
-                    request_id: requestId,
-                }))
-            }
+            // const response = await axios.post(process.env.F88_API, {
+            //     PartnerCode: "VNFITE",
+            //     RequestId: requestId,
+            //     Data: [
+            //         {
+            //             CampaignId: 2,
+            //             SourceId: 393,
+            //             AssetTypeId: body.asset_type_id,
+            //             PhoneNumber: body.phone_number,
+            //             TrackingId: "VNFITE_F88",
+            //             FullName: body.full_name,
+            //             Address: body.address,
+            //             CityId: body.city_id,
+            //             DistrictId: body.district_id,
+            //             Money: body.money
+            //         }
+            //     ]
+            // });
+            res.json(SuccessResponse({
+                request_id: requestId,
+                message: "Đẩy đơn thành công"
+            }))
+            
+            await session.commitTransaction();
+            session.endSession();
         } catch (error) {
+            console.log(error)
             res.json(FailureResponse("04", error))
+            await session.abortTransaction();
+            session.endSession();
         }
     },
     pushData: async(req, res) => {
@@ -190,8 +234,8 @@ const F88ServiceController = {
                     console.log(`tracking_id: ${body[i].trackingId}`)
                     console.log(error)
                     data.push({
-                        errorCode: "18",
-                        errorMessage: HandleErrorCode("18"),
+                        errorCode: "23",
+                        errorMessage: HandleErrorCode("23"),
                         trackingId: body[i].trackingId,
                         idPartnerQueue: body[i].idPartnerQueue
                     })
@@ -204,6 +248,27 @@ const F88ServiceController = {
                 data: data
             })
             console.log("===================================")
+        } catch (error) {
+            console.log(error)
+            res.json(FailureResponse("21", error))
+        }
+    },
+    getSoLuongDataThang: async(req, res) => {
+        const {body} = req;
+        try {
+            const records = await FormPushF88Model.find({
+                $expr: {
+                  $and: [
+                    { $eq: [{ $arrayElemAt: [{ $split: ["$date", "/"] }, 1] }, body.month] }, // So sánh tháng
+                    { $eq: [{ $arrayElemAt: [{ $split: ["$date", "/"] }, 2] }, body.year] }   // So sánh năm
+                  ]
+                }
+              });
+          
+              res.json(SuccessResponse({
+                totalRecord: records.length,
+                records: records
+              })); // Trả về kết quả
         } catch (error) {
             console.log(error)
             res.json(FailureResponse("16", error))
@@ -233,8 +298,8 @@ const F88ServiceController = {
                     console.log(`tracking_id: ${body[i].trackingId}`)
                     console.log(error)
                     data.push({
-                        errorCode: "19",
-                        errorMessage: HandleErrorCode("19"),
+                        errorCode: "24",
+                        errorMessage: HandleErrorCode("24"),
                         trackingId: body[i].trackingId,
                         idPartnerQueue: body[i].idPartnerQueue
                     })
@@ -249,9 +314,60 @@ const F88ServiceController = {
             console.log("===================================")
         } catch (error) {
             console.log(error)
+            res.json(FailureResponse("22", error))
+        }
+    },  
+
+    getNumberOfDataForDate: async(req, res) => {
+        try {
+            const data = []
+            const listDay = getLastForDays(300)
+            const results = await Promise.all(
+                listDay.map(async (date) => {
+                    const count = await FormPushF88Model.countDocuments({ date }); // Truy vấn theo ngày
+                    return { date, count };
+                })
+            )
+            res.json(SuccessResponse(results)) // Trả về kết quả
+            console.log(data)
+        } catch (error) {
+            console.log(error)
             res.json(FailureResponse("17", error))
         }
+    },
+    getDanhSachKhachHangTheoNgay: async(req, res) => {
+        const { query } = req
+        try {
+            const {date} = query
+            const listData = await FormPushF88Model.find({date: date}).populate('id_customer').lean()
+            const modifiedlistData = listData.map((form) => {
+                form.customer_info = form.id_customer
+                delete form.id_customer
+                return form;
+            });
+            res.json(SuccessResponse({
+                total: modifiedlistData.length,
+                data: modifiedlistData
+            }))
+        } catch (error) {
+            console.log(error)
+            res.json(FailureResponse("18", error))
+        }
+    },
+    capNhatTrangThaiSauKhiCallReport: async (req, res) => {
+        const {body} = req
+        try {
+            const idCustomer = body.idCustomer
+            const trangThaiSauCallReport = body.status
+            const cancelReson = body.status == 3 ? body.cancelReson : ""
+            await FormPushF88Model.findOneAndUpdate({id_customer: idCustomer}, {status: trangThaiSauCallReport, canceled_reason: cancelReson})
+            res.json(SuccessResponse())
+        } catch (error) {
+            console.log(error)
+            res.json(FailureResponse("20", error))
+        }
     }
+
 }
 
 module.exports = {F88ServiceController, pushDocument}
