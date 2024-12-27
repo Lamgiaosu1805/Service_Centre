@@ -186,7 +186,7 @@ const F88ServiceController = {
                     date: `${day}/${month}/${year}`,
                     asset_type_id: body.asset_type_id,
                     price_debit: body.money,
-                    tracking_id: `VNFITE_F88_${numberData + index + 1}`
+                    tracking_id: `VNFITE_F88_${numberData + 1}`
                 })
                 await newFormPush.save({session})
             }
