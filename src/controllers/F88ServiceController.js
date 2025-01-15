@@ -39,7 +39,8 @@ const pushDocument = async (isApi, res, numberCustomer) => {
             },
             { $unwind: '$formPushF88' },
         ]).session(session)
-        const dataPush = data.map((item) => {
+        const dataFilterd = data.filter((e) => e.formPushF88.status == 4)
+        const dataPush = dataFilterd.map((item) => {
             return {
                 CampaignId: 2,
                 SourceId: 393,
@@ -205,7 +206,7 @@ const F88ServiceController = {
         }
     },
     pushData: async(req, res) => {
-        await pushDocument(true, res, 5)
+        await pushDocument(true, res, 1000)
     },
     callbackResultPOL: async(req, res) => {
         const {body} = req
