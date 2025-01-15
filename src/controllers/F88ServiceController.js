@@ -218,8 +218,9 @@ const F88ServiceController = {
                 try {
                     await FormPushF88Model.findOneAndUpdate({tracking_id: body[i].trackingId}, {
                         id_Pol: body[i].idPol, 
-                        result_push: body[i].status, 
+                        result_push: body[i].status,
                         canceled_reason: body[i].canceledReason,
+                        status: body[i].status == 0 ? 3 : 1
                     })
                     data.push({
                         errorCode: "200",
